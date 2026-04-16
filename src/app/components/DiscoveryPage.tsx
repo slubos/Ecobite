@@ -6,6 +6,7 @@ import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Progress } from "./ui/progress";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { allProducts } from "../data/products";
 
 interface Recipe {
   id: string;
@@ -240,9 +241,75 @@ export function DiscoveryPage() {
   const progressPercentage = Math.min((weeklyImpact / weeklyGoal) * 100, 100);
 
   const handleAddIngredientsToCart = (recipe: Recipe) => {
-    // Simulate adding recipe ingredients to cart
-    const cartItems = recipe.ingredients.map((ing, idx) => `recipe_${recipe.id}_${idx}`);
-    localStorage.setItem('cartItems', JSON.stringify(cartItems));
+    // Map recipe ingredients to actual product IDs
+    const ingredientMapping: { [key: string]: string } = {
+      "Spinach": "3",
+      "Chickpeas": "10",
+      "Lemon": "23",
+      "Olive Oil": "30",
+      "Bell Peppers": "21",
+      "Broccoli": "12",
+      "Carrots": "7",
+      "Soy Sauce": "47", // Using soy milk as closest match
+      "Local Strawberries": "1b",
+      "Banana": "13",
+      "Oats": "31",
+      "Almond Milk": "26", // Using almond butter as closest match
+      "Mixed Vegetables": "21", // Default to bell peppers
+      "Vegetable Stock": "3", // Default to spinach
+      "Herbs": "3", // Default to spinach
+      "Whole Grain Pasta": "19",
+      "Garlic": "29", // Using onions as closest match
+      "Quinoa": "50",
+      "Kale": "33",
+      "Sweet Potato": "34",
+      "Brown Rice": "20",
+      "Tofu": "25",
+      "Avocado": "24",
+      "Red Lentils": "52",
+      "Coconut Milk": "48",
+      "Tomatoes": "6",
+      "Curry Spices": "55", // Using dark chocolate as closest match (pantry item)
+      "Zucchini": "35",
+      "Eggplant": "36",
+      "Garam Masala": "55", // Using dark chocolate as closest match (pantry item)
+      "Chia Seeds": "60",
+      "Berries": "32",
+      "Sourdough Bread": "8",
+      "Eggs": "4",
+      "Cherry Tomatoes": "6"
+    };
+
+    // Load existing cart
+    const storedCart = localStorage.getItem('cartItems');
+    let cartData: { [key: string]: number } = {};
+    
+    if (storedCart) {
+      try {
+        const parsedCart = JSON.parse(storedCart);
+        // Handle both old array format and new object format
+        if (Array.isArray(parsedCart)) {
+          parsedCart.forEach(id => {
+            cartData[id] = 1;
+          });
+        } else {
+          cartData = parsedCart;
+        }
+      } catch (e) {
+        console.error('Failed to parse cart', e);
+      }
+    }
+
+    // Add recipe ingredients to cart (with quantity 1 each or increment if already exists)
+    recipe.ingredients.forEach(ingredient => {
+      const productId = ingredientMapping[ingredient];
+      if (productId) {
+        cartData[productId] = (cartData[productId] || 0) + 1;
+      }
+    });
+
+    // Save updated cart
+    localStorage.setItem('cartItems', JSON.stringify(cartData));
     navigate("/cart");
   };
 

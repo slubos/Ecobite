@@ -1,23 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { Leaf, ShoppingCart, TrendingDown, AlertCircle, Check, X, Star, ArrowLeft } from "lucide-react";
+import { Leaf, ShoppingCart, TrendingDown, AlertCircle, Check, X, Star, ArrowLeft, Plus, Minus } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
-
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  co2: number;
-  category: string;
-  image: string;
-  tags: string[];
-}
+import { allProducts, type Product } from "../data/products";
 
 interface CartItem extends Product {
+  quantity: number;
   inCart: boolean;
   hasSwap?: boolean;
   swapSuggestion?: {
@@ -30,150 +22,55 @@ interface CartItem extends Product {
   };
 }
 
-// All available products (same as in ShopPage)
-const allProducts: Product[] = [
-  {
-    id: "1",
-    name: "Imported Strawberries (Spain)",
-    price: 4.99,
-    co2: 2.4,
-    category: "Fruits",
-    image: "https://images.unsplash.com/photo-1685282332532-f44752c19b9a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMHN0cmF3YmVycmllcyUyMGNsb3NldXB8ZW58MXx8fHwxNzc2MjM0NDI0fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    tags: ["Fresh"],
-  },
-  {
-    id: "1b",
-    name: "Local Strawberries (Seasonal)",
-    price: 4.59,
-    co2: 0.3,
-    category: "Fruits",
-    image: "https://images.unsplash.com/photo-1685282332532-f44752c19b9a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMHN0cmF3YmVycmllcyUyMGNsb3NldXB8ZW58MXx8fHwxNzc2MjM0NDI0fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    tags: ["Fresh", "Local", "Seasonal"],
-  },
-  {
-    id: "2",
-    name: "Beef Mince (Standard)",
-    price: 8.99,
-    co2: 27.0,
-    category: "Meat",
-    image: "https://images.unsplash.com/photo-1700777279865-fbb065328a25?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxncm91bmQlMjBiZWVmJTIwbWVhdHxlbnwxfHx8fDE3NzYzMjc3NTV8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    tags: ["Protein"],
-  },
-  {
-    id: "2b",
-    name: "Plant-Based Mince",
-    price: 7.49,
-    co2: 2.1,
-    category: "Meat Alternatives",
-    image: "https://images.unsplash.com/photo-1700777279865-fbb065328a25?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxncm91bmQlMjBiZWVmJTIwbWVhdHxlbnwxfHx8fDE3NzYzMjc3NTV8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    tags: ["Protein", "Vegan", "Low-Carbon"],
-  },
-  {
-    id: "3",
-    name: "Organic Spinach",
-    price: 2.49,
-    co2: 0.4,
-    category: "Vegetables",
-    image: "https://images.unsplash.com/photo-1634731201932-9bd92839bea2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMHNwaW5hY2glMjBsZWF2ZXN8ZW58MXx8fHwxNzc2MzI3NzU1fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    tags: ["Fresh", "Organic", "Local"],
-  },
-  {
-    id: "4",
-    name: "Free-Range Eggs",
-    price: 3.99,
-    co2: 1.8,
-    category: "Dairy & Eggs",
-    image: "https://images.unsplash.com/photo-1585355611444-06154f329e96?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmcmVlJTIwcmFuZ2UlMjBlZ2dzJTIwY2FydG9ufGVufDF8fHx8MTc3NjMyNzc1Nnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    tags: ["Protein", "Free-Range"],
-  },
-  {
-    id: "5",
-    name: "Plastic-Wrapped Cucumber",
-    price: 1.29,
-    co2: 0.8,
-    category: "Vegetables",
-    image: "https://images.unsplash.com/photo-1725369865895-0dd4566c8864?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMGN1Y3VtYmVyJTIwdmVnZXRhYmxlfGVufDF8fHx8MTc3NjMxMzYyM3ww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    tags: ["Fresh"],
-  },
-  {
-    id: "5b",
-    name: "Unwrapped Cucumber",
-    price: 1.29,
-    co2: 0.2,
-    category: "Vegetables",
-    image: "https://images.unsplash.com/photo-1725369865895-0dd4566c8864?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMGN1Y3VtYmVyJTIwdmVnZXRhYmxlfGVufDF8fHx8MTc3NjMxMzYyM3ww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    tags: ["Fresh", "Plastic-Free", "Local"],
-  },
-  {
-    id: "6",
-    name: "Organic Tomatoes",
-    price: 3.49,
-    co2: 0.6,
-    category: "Vegetables",
-    image: "https://images.unsplash.com/photo-1700064165267-8fa68ef07167?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0b21hdG9lcyUyMGZyZXNoJTIwcHJvZHVjZXxlbnwxfHx8fDE3NzYzMTQ4NDh8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    tags: ["Fresh", "Organic"],
-  },
-  {
-    id: "7",
-    name: "Organic Carrots",
-    price: 2.29,
-    co2: 0.3,
-    category: "Vegetables",
-    image: "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxvcmdhbmljJTIwY2Fycm90cyUyMGJ1bmNofGVufDF8fHx8MTc3NjI0OTAzNHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    tags: ["Fresh", "Organic", "Local"],
-  },
-  {
-    id: "8",
-    name: "Artisan Sourdough Bread",
-    price: 4.29,
-    co2: 0.7,
-    category: "Bakery",
-    image: "https://images.unsplash.com/photo-1663904460424-91895028aa9e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMGJyZWFkJTIwbG9hZnxlbnwxfHx8fDE3NzYzMTI2MTh8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    tags: ["Fresh", "Local"],
-  },
-  {
-    id: "9",
-    name: "Oat Milk",
-    price: 3.19,
-    co2: 0.4,
-    category: "Dairy & Eggs",
-    image: "https://images.unsplash.com/photo-1583507623011-5cc6ff99e11c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxvYXQlMjBtaWxrJTIwYm90dGxlfGVufDF8fHx8MTc3NjMyNzc2NHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    tags: ["Vegan", "Low-Carbon"],
-  },
-  {
-    id: "10",
-    name: "Organic Chickpeas",
-    price: 1.99,
-    co2: 0.5,
-    category: "Pantry",
-    image: "https://images.unsplash.com/photo-1760942852135-e98d57fe0ba2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaGlja3BlYXMlMjBkcmllZCUyMGxlZ3VtZXN8ZW58MXx8fHwxNzc2MzI3NzYzfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    tags: ["Organic", "Vegan", "Protein"],
-  },
-  {
-    id: "11",
-    name: "Local Apples",
-    price: 3.79,
-    co2: 0.2,
-    category: "Fruits",
-    image: "https://images.unsplash.com/photo-1744801283301-5a58c498794d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxvcmdhbmljJTIwYXBwbGVzJTIwZnJ1aXR8ZW58MXx8fHwxNzc2MjI5MjU3fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    tags: ["Fresh", "Local", "Organic"],
-  },
-  {
-    id: "12",
-    name: "Fresh Broccoli",
-    price: 2.89,
-    co2: 0.4,
-    category: "Vegetables",
-    image: "https://images.unsplash.com/photo-1757332334626-8dadb145540d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMGJyb2Njb2xpJTIwdmVnZXRhYmxlfGVufDF8fHx8MTc3NjMyMjA0OHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
-    tags: ["Fresh", "Local"],
-  },
-];
+// Cart data type: { productId: quantity }
+type CartData = { [productId: string]: number };
 
 // Swap suggestions mapping
 const swapSuggestions: { [key: string]: { swapId: string; reason: string; distance: number } } = {
+  // FRUITS - Imported to Local/Seasonal
   "1": { swapId: "1b", reason: "sourced within 50km and saves you €0.40", distance: 47 },
-  "2": { swapId: "2b", reason: "92% less CO₂ emissions and €1.50 savings", distance: 0 },
+  "13": { swapId: "11", reason: "locally grown and 50% less CO₂", distance: 35 },
+  "23": { swapId: "1b", reason: "seasonal strawberries have better flavor and less CO₂", distance: 47 },
+  "24": { swapId: "32", reason: "local blueberries are in season and 33% less CO₂", distance: 22 },
+  
+  // VEGETABLES - Conventional to Organic/Local
   "5": { swapId: "5b", reason: "plastic-free packaging with no price difference", distance: 0 },
+  "6": { swapId: "22", reason: "local lettuce is fresher and 50% less CO₂", distance: 28 },
+  "21": { swapId: "12", reason: "local broccoli has similar nutrients and lower footprint", distance: 31 },
+  "28": { swapId: "3", reason: "organic spinach is nutrient-rich and locally sourced", distance: 18 },
+  "37": { swapId: "12", reason: "broccoli is in season and 33% less CO₂", distance: 31 },
+  "38": { swapId: "39", reason: "Brussels sprouts are seasonal and save €0.50", distance: 0 },
+  
+  // MEAT - High Impact to Lower Impact or Plant-Based
+  "2": { swapId: "2b", reason: "92% less CO₂ emissions and €1.50 savings", distance: 0 },
+  "16": { swapId: "25", reason: "plant-based alternative with 85% less CO₂", distance: 0 },
+  "40": { swapId: "25", reason: "tofu alternative with 92% less CO₂", distance: 0 },
+  "41": { swapId: "16", reason: "chicken has 82% less CO₂ and saves €8.50", distance: 0 },
+  "42": { swapId: "16", reason: "chicken breast has similar protein and 37% less CO₂", distance: 0 },
+  
+  // SEAFOOD - High Impact to Sustainable Options
+  "15": { swapId: "45", reason: "local cod has 44% less CO₂ and saves €1.00", distance: 0 },
+  "43": { swapId: "45", reason: "cod has 89% less CO₂ and saves €4.00", distance: 0 },
+  "44": { swapId: "45", reason: "cod is sustainably sourced and saves €2.50", distance: 0 },
+  
+  // DAIRY - Dairy to Plant-Based
+  "17": { swapId: "9", reason: "dairy-free option saves 66% CO₂ and €1.00", distance: 0 },
+  "46": { swapId: "9", reason: "oat milk has 79% less CO₂ than dairy", distance: 0 },
+  "18": { swapId: "49", reason: "fresher and 8% lower carbon footprint", distance: 0 },
+  "4": { swapId: "9", reason: "oat milk is a sustainable protein alternative", distance: 0 },
+  
+  // PANTRY - Conventional to Organic
+  "19": { swapId: "20", reason: "organic brown rice is healthier and supports sustainable farming", distance: 0 },
+  "26": { swapId: "53", reason: "natural peanut butter saves €3.00 and has similar nutrition", distance: 0 },
+  "55": { swapId: "31", reason: "organic granola is a healthier sweet alternative", distance: 0 },
+  "56": { swapId: "30", reason: "olive oil is more versatile and €1.50 cheaper", distance: 0 },
+  
+  // NUTS & SEEDS - Imported to Local/Lower Impact
+  "57": { swapId: "58", reason: "walnuts have omega-3 and 21% less CO₂", distance: 0 },
+  "59": { swapId: "58", reason: "walnuts are locally sourced and save €0.50", distance: 0 },
+  
+  // BEVERAGES - Standard to Sustainable
+  "9": { swapId: "47", reason: "soy milk has similar protein and 33% more CO₂ efficient", distance: 0 },
 };
 
 export function SmartCartPage() {
@@ -186,8 +83,20 @@ export function SmartCartPage() {
     // Load cart from localStorage
     const storedCart = localStorage.getItem('cartItems');
     if (storedCart) {
-      const cartIds: string[] = JSON.parse(storedCart);
-      const items: CartItem[] = cartIds.map(id => {
+      const cartData: CartData = JSON.parse(storedCart);
+      
+      // Handle both old array format and new object format
+      let cartObj: CartData;
+      if (Array.isArray(cartData)) {
+        cartObj = {};
+        cartData.forEach(id => {
+          cartObj[id] = 1;
+        });
+      } else {
+        cartObj = cartData;
+      }
+
+      const items: CartItem[] = Object.entries(cartObj).map(([id, quantity]) => {
         const product = allProducts.find(p => p.id === id);
         if (!product) return null;
 
@@ -210,6 +119,7 @@ export function SmartCartPage() {
 
         return {
           ...product,
+          quantity,
           inCart: true,
           hasSwap: !!swap,
           swapSuggestion,
@@ -222,15 +132,41 @@ export function SmartCartPage() {
 
   const totalCO2 = cartItems
     .filter((item) => item.inCart)
-    .reduce((sum, item) => sum + item.co2, 0);
+    .reduce((sum, item) => sum + (item.co2 * item.quantity), 0);
 
   const totalPrice = cartItems
     .filter((item) => item.inCart)
-    .reduce((sum, item) => sum + item.price, 0);
+    .reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+  const totalItems = cartItems
+    .filter((item) => item.inCart)
+    .reduce((sum, item) => sum + item.quantity, 0);
+
+  const updateQuantity = (itemId: string, newQuantity: number) => {
+    if (newQuantity <= 0) {
+      handleRemoveItem(itemId);
+      return;
+    }
+
+    setCartItems(items => {
+      const updatedItems = items.map(item => 
+        item.id === itemId ? { ...item, quantity: newQuantity } : item
+      );
+
+      // Update localStorage
+      const cartData: CartData = {};
+      updatedItems.forEach(item => {
+        cartData[item.id] = item.quantity;
+      });
+      localStorage.setItem('cartItems', JSON.stringify(cartData));
+
+      return updatedItems;
+    });
+  };
 
   const handleSwapAccept = (itemId: string) => {
-    setCartItems((items) =>
-      items.map((item) => {
+    setCartItems((items) => {
+      const updatedItems = items.map((item) => {
         if (item.id === itemId && item.swapSuggestion) {
           // Find the swap product ID
           const swapId = swapSuggestions[itemId]?.swapId;
@@ -239,6 +175,7 @@ export function SmartCartPage() {
           if (swapProduct) {
             return {
               ...swapProduct,
+              quantity: item.quantity, // Preserve quantity
               inCart: true,
               hasSwap: false,
               swapSuggestion: undefined,
@@ -246,8 +183,17 @@ export function SmartCartPage() {
           }
         }
         return item;
-      })
-    );
+      });
+
+      // Update localStorage
+      const cartData: CartData = {};
+      updatedItems.forEach(item => {
+        cartData[item.id] = item.quantity;
+      });
+      localStorage.setItem('cartItems', JSON.stringify(cartData));
+
+      return updatedItems;
+    });
     setShowComparison(null);
   };
 
@@ -259,13 +205,15 @@ export function SmartCartPage() {
   };
 
   const handleRemoveItem = (itemId: string) => {
-    setCartItems(items => items.filter(item => item.id !== itemId));
-    const storedCart = localStorage.getItem('cartItems');
-    if (storedCart) {
-      const cartIds: string[] = JSON.parse(storedCart);
-      const updatedCart = cartIds.filter(id => id !== itemId);
-      localStorage.setItem('cartItems', JSON.stringify(updatedCart));
-    }
+    const updatedItems = cartItems.filter(item => item.id !== itemId);
+    setCartItems(updatedItems);
+    
+    // Update localStorage
+    const cartData: CartData = {};
+    updatedItems.forEach(item => {
+      cartData[item.id] = item.quantity;
+    });
+    localStorage.setItem('cartItems', JSON.stringify(cartData));
   };
 
   const getComparisonData = (item: CartItem) => {
@@ -382,6 +330,27 @@ export function SmartCartPage() {
                         </div>
                       </div>
 
+                      {/* Quantity Control */}
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                          className="text-gray-500"
+                        >
+                          <Minus className="w-4 h-4" />
+                        </Button>
+                        <span className="text-sm font-medium">{item.quantity}</span>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          className="text-gray-500"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </div>
+
                       {/* Eco-Nudge */}
                       {item.hasSwap && item.swapSuggestion && (
                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 space-y-3">
@@ -423,8 +392,57 @@ export function SmartCartPage() {
 
                           {/* Impact Comparison Widget */}
                           {showComparison === item.id && (
-                            <div className="bg-white rounded-lg p-4 border">
-                              <h4 className="text-sm font-medium mb-3">Impact Comparison</h4>
+                            <div className="bg-white rounded-lg p-4 border space-y-4">
+                              <div className="flex items-center justify-between">
+                                <h4 className="text-sm font-medium">Impact Comparison</h4>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => setShowComparison(null)}
+                                  className="text-xs text-gray-500"
+                                >
+                                  Close
+                                </Button>
+                              </div>
+                              
+                              {/* Product Comparison Cards */}
+                              <div className="grid grid-cols-2 gap-3">
+                                {/* Current Product */}
+                                <div className="border rounded-lg p-3 bg-gray-50">
+                                  <div className="text-xs text-gray-500 mb-2">Current</div>
+                                  <div className="w-full h-20 rounded overflow-hidden mb-2">
+                                    <ImageWithFallback
+                                      src={item.image}
+                                      alt={item.name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <div className="text-xs font-medium mb-1">{item.name}</div>
+                                  <div className="text-xs text-gray-600">
+                                    <div>€{item.price.toFixed(2)}</div>
+                                    <div>{item.co2.toFixed(1)} kg CO₂</div>
+                                  </div>
+                                </div>
+
+                                {/* Suggested Product */}
+                                <div className="border-2 border-green-500 rounded-lg p-3 bg-green-50">
+                                  <div className="text-xs text-green-700 mb-2 font-medium">Suggested</div>
+                                  <div className="w-full h-20 rounded overflow-hidden mb-2">
+                                    <ImageWithFallback
+                                      src={item.swapSuggestion.image}
+                                      alt={item.swapSuggestion.name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </div>
+                                  <div className="text-xs font-medium mb-1">{item.swapSuggestion.name}</div>
+                                  <div className="text-xs text-gray-600">
+                                    <div className="text-green-700">€{item.swapSuggestion.price.toFixed(2)}</div>
+                                    <div className="text-green-700">{item.swapSuggestion.co2.toFixed(1)} kg CO₂</div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Chart */}
                               <ResponsiveContainer width="100%" height={150}>
                                 <BarChart data={getComparisonData(item)}>
                                   <CartesianGrid strokeDasharray="3 3" />
@@ -435,15 +453,54 @@ export function SmartCartPage() {
                                   <Bar dataKey="Suggested" fill="#16a34a" name="Suggested" />
                                 </BarChart>
                               </ResponsiveContainer>
+
+                              {/* Savings Summary */}
+                              <div className="bg-green-50 rounded p-3">
+                                <div className="text-xs font-medium text-green-900 mb-1">Potential Savings</div>
+                                <div className="flex gap-4 text-xs text-green-800">
+                                  <div>
+                                    <span className="font-semibold">€{Math.abs(item.price - item.swapSuggestion.price).toFixed(2)}</span>
+                                    {item.price > item.swapSuggestion.price ? " saved" : " more"}
+                                  </div>
+                                  <div>
+                                    <span className="font-semibold">{Math.abs(item.co2 - item.swapSuggestion.co2).toFixed(1)} kg CO₂</span>
+                                    {item.co2 > item.swapSuggestion.co2 ? " reduced" : " more"}
+                                  </div>
+                                </div>
+                              </div>
                               
+                              {/* Action Buttons */}
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleSwapAccept(item.id)}
+                                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                                >
+                                  <Check className="w-4 h-4 mr-1" />
+                                  Accept Swap
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => setShowComparison(null)}
+                                  className="flex-1"
+                                >
+                                  <X className="w-4 h-4 mr-1" />
+                                  Decline
+                                </Button>
+                              </div>
+
                               {/* Rejection Reasons */}
-                              <div className="mt-4 pt-4 border-t">
-                                <p className="text-xs text-gray-600 mb-2">Why not?</p>
+                              <div className="pt-3 border-t">
+                                <p className="text-xs text-gray-600 mb-2">Not interested? Tell us why:</p>
                                 <div className="flex gap-2 flex-wrap">
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    onClick={() => handleSwapReject(item.id, "Too Expensive")}
+                                    onClick={() => {
+                                      handleSwapReject(item.id, "Too Expensive");
+                                      setShowComparison(null);
+                                    }}
                                     className="text-xs"
                                   >
                                     Too Expensive
@@ -451,7 +508,10 @@ export function SmartCartPage() {
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    onClick={() => handleSwapReject(item.id, "Don't Like Taste")}
+                                    onClick={() => {
+                                      handleSwapReject(item.id, "Don't Like Taste");
+                                      setShowComparison(null);
+                                    }}
                                     className="text-xs"
                                   >
                                     Don't Like Taste
@@ -459,7 +519,10 @@ export function SmartCartPage() {
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    onClick={() => handleSwapReject(item.id, "Need Specific Brand")}
+                                    onClick={() => {
+                                      handleSwapReject(item.id, "Need Specific Brand");
+                                      setShowComparison(null);
+                                    }}
                                     className="text-xs"
                                   >
                                     Need Specific Brand
@@ -485,7 +548,7 @@ export function SmartCartPage() {
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Items</span>
-                    <span className="font-medium">{cartItems.filter((i) => i.inCart).length}</span>
+                    <span className="font-medium">{totalItems}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Total Price</span>
