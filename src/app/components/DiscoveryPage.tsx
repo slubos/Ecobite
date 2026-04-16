@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { Leaf, ShoppingCart, TrendingDown, Clock, Flame, Star } from "lucide-react";
+import { Leaf, ShoppingCart, TrendingDown, Clock, Flame, Star, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -16,6 +16,7 @@ interface Recipe {
   tags: string[];
   ingredients: string[];
   pantrySync?: string;
+  instructions?: string[];
 }
 
 const mockRecipes: Recipe[] = [
@@ -28,6 +29,13 @@ const mockRecipes: Recipe[] = [
     tags: ["One-Pot Meal", "Seasonal"],
     ingredients: ["Spinach", "Chickpeas", "Lemon", "Olive Oil"],
     pantrySync: "Uses up your leftover Spinach",
+    instructions: [
+      "Heat olive oil in a large pan over medium heat",
+      "Add spinach and sauté until wilted (3-4 minutes)",
+      "Add chickpeas and cook for 5 minutes",
+      "Season with lemon juice, salt, and pepper",
+      "Serve warm in a bowl"
+    ]
   },
   {
     id: "2",
@@ -37,6 +45,13 @@ const mockRecipes: Recipe[] = [
     co2: 0.5,
     tags: ["Quick & Easy", "Low-Carbon"],
     ingredients: ["Bell Peppers", "Broccoli", "Carrots", "Soy Sauce"],
+    instructions: [
+      "Chop all vegetables into bite-sized pieces",
+      "Heat oil in a wok or large pan",
+      "Stir-fry vegetables for 8-10 minutes",
+      "Add soy sauce and toss to combine",
+      "Serve immediately over rice"
+    ]
   },
   {
     id: "3",
@@ -46,24 +61,190 @@ const mockRecipes: Recipe[] = [
     co2: 0.3,
     tags: ["Breakfast", "Seasonal"],
     ingredients: ["Local Strawberries", "Banana", "Oats", "Almond Milk"],
+    instructions: [
+      "Blend strawberries, banana, and almond milk until smooth",
+      "Pour into a bowl",
+      "Top with oats and fresh berries",
+      "Add optional toppings like chia seeds or nuts"
+    ]
   },
   {
     id: "4",
     name: "Zero-Waste Vegetable Soup",
-    image: "https://images.unsplash.com/photo-1652262968340-b735524f9ae4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzdXN0YWluYWJsZSUyMHBhY2thZ2luZyUyMGdyb2Nlcmllc3xlbnwxfHx8fDE3NzYzMjcxNzR8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+    image: "https://images.unsplash.com/photo-1643786661490-966f1877effa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx2ZWdldGFibGUlMjBzb3VwJTIwYm93bCUyMGhlYWx0aHl8ZW58MXx8fHwxNzc2MjM4ODk1fDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
     cookTime: 30,
     co2: 0.6,
     tags: ["One-Pot Meal", "Waste Reduction"],
     ingredients: ["Mixed Vegetables", "Vegetable Stock", "Herbs"],
     pantrySync: "Perfect for using vegetable scraps",
+    instructions: [
+      "Chop all vegetables and scraps",
+      "Bring vegetable stock to a boil",
+      "Add vegetables and simmer for 20 minutes",
+      "Season with herbs and spices",
+      "Blend if desired or serve chunky"
+    ]
+  },
+  {
+    id: "5",
+    name: "Pasta Primavera",
+    image: "https://images.unsplash.com/photo-1571951286227-7a28b07822ea?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwYXN0YSUyMHByaW1hdmVyYSUyMGNvbG9yZnVsJTIwZGlzaHxlbnwxfHx8fDE3NzYzMjk4MTl8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+    cookTime: 20,
+    co2: 1.2,
+    tags: ["Quick & Easy", "Seasonal"],
+    ingredients: ["Whole Grain Pasta", "Mixed Vegetables", "Olive Oil", "Garlic"],
+    instructions: [
+      "Cook pasta according to package directions",
+      "Sauté vegetables in olive oil with garlic",
+      "Toss cooked pasta with vegetables",
+      "Season with salt, pepper, and fresh herbs"
+    ]
+  },
+  {
+    id: "6",
+    name: "Quinoa Power Bowl",
+    image: "https://images.unsplash.com/photo-1561451055-0de615569a38?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxxdWlub2ElMjBzYWxhZCUyMGJvd2wlMjBmcmVzaHxlbnwxfHx8fDE3NzYzMjk4MjB8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+    cookTime: 30,
+    co2: 1.1,
+    tags: ["High-Protein", "Meal Prep"],
+    ingredients: ["Quinoa", "Kale", "Sweet Potato", "Chickpeas"],
+    pantrySync: "Uses your Quinoa and Chickpeas",
+    instructions: [
+      "Cook quinoa according to package",
+      "Roast sweet potato cubes at 400°F for 25 minutes",
+      "Massage kale with olive oil",
+      "Combine all ingredients in a bowl",
+      "Top with tahini dressing"
+    ]
+  },
+  {
+    id: "7",
+    name: "Buddha Bowl Delight",
+    image: "https://images.unsplash.com/photo-1675092789086-4bd2b93ffc69?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidWRkaGElMjBib3dsJTIwdmVnYW4lMjBoZWFsdGh5fGVufDF8fHx8MTc3NjMyOTgyMXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+    cookTime: 35,
+    co2: 0.9,
+    tags: ["Vegan", "Nutrient-Dense"],
+    ingredients: ["Brown Rice", "Tofu", "Avocado", "Mixed Vegetables"],
+    instructions: [
+      "Cook brown rice",
+      "Press and cube tofu, then pan-fry until golden",
+      "Steam or roast your choice of vegetables",
+      "Slice avocado",
+      "Arrange all components in a bowl and drizzle with dressing"
+    ]
+  },
+  {
+    id: "8",
+    name: "Spiced Lentil Curry",
+    image: "https://images.unsplash.com/photo-1767114915989-c6ab3c8fc42e?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsZW50aWwlMjBjdXJyeSUyMGluZGlhbiUyMHNwaWN5fGVufDF8fHx8MTc3NjMyOTgyMXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+    cookTime: 40,
+    co2: 0.7,
+    tags: ["One-Pot Meal", "High-Protein"],
+    ingredients: ["Red Lentils", "Coconut Milk", "Tomatoes", "Curry Spices"],
+    instructions: [
+      "Sauté onions and garlic in oil",
+      "Add curry spices and cook for 1 minute",
+      "Add lentils, tomatoes, and coconut milk",
+      "Simmer for 25-30 minutes until lentils are tender",
+      "Serve with rice or naan"
+    ]
+  },
+  {
+    id: "9",
+    name: "Roasted Rainbow Vegetables",
+    image: "https://images.unsplash.com/photo-1584615467008-2f396a45ef10?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxyb2FzdGVkJTIwdmVnZXRhYmxlcyUyMGNvbG9yZnVsJTIwdHJheXxlbnwxfHx8fDE3NzYzMjk4MjF8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+    cookTime: 35,
+    co2: 0.5,
+    tags: ["Low-Carbon", "Meal Prep"],
+    ingredients: ["Bell Peppers", "Zucchini", "Eggplant", "Olive Oil"],
+    instructions: [
+      "Preheat oven to 425°F",
+      "Chop vegetables into uniform pieces",
+      "Toss with olive oil, salt, and pepper",
+      "Roast for 30 minutes, stirring halfway",
+      "Serve as a side or over grains"
+    ]
+  },
+  {
+    id: "10",
+    name: "Chickpea Coconut Curry",
+    image: "https://images.unsplash.com/photo-1634234498505-51b316832b28?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaGlja3BlYSUyMGN1cnJ5JTIwYm93bCUyMHZlZ2FufGVufDF8fHx8MTc3NjMyOTgyMXww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+    cookTime: 30,
+    co2: 0.8,
+    tags: ["Vegan", "One-Pot Meal"],
+    ingredients: ["Chickpeas", "Coconut Milk", "Spinach", "Garam Masala"],
+    pantrySync: "Perfect for your Chickpeas and Spinach",
+    instructions: [
+      "Sauté onions until soft",
+      "Add garam masala and cook for 1 minute",
+      "Add chickpeas and coconut milk",
+      "Simmer for 15 minutes",
+      "Stir in spinach until wilted"
+    ]
+  },
+  {
+    id: "11",
+    name: "Tofu Veggie Stir-Fry",
+    image: "https://images.unsplash.com/photo-1644527199880-fcf2bb61b2b4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0b2Z1JTIwc3RpciUyMGZyeSUyMHZlZ2V0YWJsZXN8ZW58MXx8fHwxNzc2MjMyMTIxfDA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+    cookTime: 20,
+    co2: 1.0,
+    tags: ["Vegan", "Quick & Easy"],
+    ingredients: ["Tofu", "Broccoli", "Bell Peppers", "Soy Sauce"],
+    instructions: [
+      "Press and cube tofu",
+      "Stir-fry tofu until golden, then set aside",
+      "Stir-fry vegetables until tender-crisp",
+      "Return tofu to pan, add soy sauce",
+      "Toss and serve over rice"
+    ]
+  },
+  {
+    id: "12",
+    name: "Overnight Oats",
+    image: "https://images.unsplash.com/photo-1588346230942-413569272957?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxvdmVybmlnaHQlMjBvYXRzJTIwYnJlYWtmYXN0JTIwamFyfGVufDF8fHx8MTc3NjMyOTgyMnww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+    cookTime: 5,
+    co2: 0.2,
+    tags: ["Breakfast", "Meal Prep"],
+    ingredients: ["Oats", "Oat Milk", "Chia Seeds", "Berries"],
+    instructions: [
+      "Combine oats, oat milk, and chia seeds in a jar",
+      "Stir well and refrigerate overnight",
+      "In the morning, top with fresh berries",
+      "Add honey or maple syrup if desired",
+      "Enjoy cold or warm"
+    ]
+  },
+  {
+    id: "13",
+    name: "Avocado Toast Deluxe",
+    image: "https://images.unsplash.com/photo-1561517146-dfbd99b0c14d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhdm9jYWRvJTIwdG9hc3QlMjBicmVha2Zhc3QlMjBoZWFsdGh5fGVufDF8fHx8MTc3NjIzMTYxOHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral",
+    cookTime: 10,
+    co2: 0.4,
+    tags: ["Breakfast", "Quick & Easy"],
+    ingredients: ["Sourdough Bread", "Avocado", "Eggs", "Cherry Tomatoes"],
+    instructions: [
+      "Toast sourdough bread",
+      "Mash avocado with salt and pepper",
+      "Spread avocado on toast",
+      "Top with sliced tomatoes and optional egg",
+      "Garnish with herbs or seeds"
+    ]
   },
 ];
 
 export function DiscoveryPage() {
   const navigate = useNavigate();
   const [weeklyImpact] = useState(12.4); // Current weekly CO2
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const weeklyGoal = 15.0; // Target weekly CO2
   const progressPercentage = Math.min((weeklyImpact / weeklyGoal) * 100, 100);
+
+  const handleAddIngredientsToCart = (recipe: Recipe) => {
+    // Simulate adding recipe ingredients to cart
+    const cartItems = recipe.ingredients.map((ing, idx) => `recipe_${recipe.id}_${idx}`);
+    localStorage.setItem('cartItems', JSON.stringify(cartItems));
+    navigate("/cart");
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -81,10 +262,13 @@ export function DiscoveryPage() {
             <button onClick={() => navigate("/shop")} className="text-gray-600 hover:text-gray-900">
               Shop
             </button>
-            <div className="flex items-center gap-2 bg-green-50 px-3 py-2 rounded-full">
+            <button 
+              onClick={() => navigate("/cart")} 
+              className="flex items-center gap-2 bg-green-50 px-3 py-2 rounded-full"
+            >
               <ShoppingCart className="w-4 h-4 text-green-600" />
-              <span className="text-green-600 font-medium">5</span>
-            </div>
+              <span className="text-green-600 font-medium">Cart</span>
+            </button>
           </nav>
         </div>
       </header>
@@ -183,10 +367,17 @@ export function DiscoveryPage() {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button variant="outline" className="flex-1">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => setSelectedRecipe(recipe)}
+                  >
                     View Recipe
                   </Button>
-                  <Button className="flex-1 bg-green-600 hover:bg-green-700 text-white">
+                  <Button 
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                    onClick={() => handleAddIngredientsToCart(recipe)}
+                  >
                     Add Ingredients to Cart
                   </Button>
                 </div>
@@ -214,6 +405,92 @@ export function DiscoveryPage() {
           </CardContent>
         </Card>
       </main>
+
+      {/* Recipe Detail Modal */}
+      {selectedRecipe && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between">
+              <h2 className="text-2xl">{selectedRecipe.name}</h2>
+              <button
+                onClick={() => setSelectedRecipe(null)}
+                className="p-2 hover:bg-gray-100 rounded-full"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6">
+              <ImageWithFallback
+                src={selectedRecipe.image}
+                alt={selectedRecipe.name}
+                className="w-full h-64 object-cover rounded-lg mb-6"
+              />
+
+              <div className="flex gap-6 mb-6 text-sm">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-gray-600" />
+                  <div>
+                    <p className="text-gray-500">Cook Time</p>
+                    <p className="font-medium">{selectedRecipe.cookTime} minutes</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <TrendingDown className="w-5 h-5 text-green-600" />
+                  <div>
+                    <p className="text-gray-500">CO₂ Impact</p>
+                    <p className="font-medium text-green-600">{selectedRecipe.co2} kg</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <h3 className="text-lg mb-3">Ingredients</h3>
+                <ul className="space-y-2">
+                  {selectedRecipe.ingredients.map((ingredient, index) => (
+                    <li key={index} className="flex items-center gap-2">
+                      <span className="w-2 h-2 bg-green-600 rounded-full"></span>
+                      {ingredient}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {selectedRecipe.instructions && (
+                <div className="mb-6">
+                  <h3 className="text-lg mb-3">Instructions</h3>
+                  <ol className="space-y-3">
+                    {selectedRecipe.instructions.map((instruction, index) => (
+                      <li key={index} className="flex gap-3">
+                        <span className="font-semibold text-green-600 min-w-[24px]">{index + 1}.</span>
+                        <span className="text-gray-700">{instruction}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => setSelectedRecipe(null)}
+                >
+                  Close
+                </Button>
+                <Button 
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                  onClick={() => {
+                    handleAddIngredientsToCart(selectedRecipe);
+                    setSelectedRecipe(null);
+                  }}
+                >
+                  Add Ingredients to Cart
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
