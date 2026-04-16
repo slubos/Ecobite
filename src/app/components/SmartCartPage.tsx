@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { Leaf, ShoppingCart, TrendingDown, AlertCircle, Check, X, Star, ArrowLeft, Plus, Minus } from "lucide-react";
+import { Leaf, ShoppingCart, TrendingDown, AlertCircle, Check, X, Star, ArrowLeft, Plus, Minus, ArrowRight, TrendingUp, Award, Sparkles, Package } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -78,6 +78,7 @@ export function SmartCartPage() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [showComparison, setShowComparison] = useState<string | null>(null);
   const [rejectionReasons, setRejectionReasons] = useState<{ [key: string]: string | null }>({});
+  const [showCheckout, setShowCheckout] = useState(false);
 
   useEffect(() => {
     // Load cart from localStorage
@@ -391,142 +392,220 @@ export function SmartCartPage() {
                           )}
 
                           {/* Impact Comparison Widget */}
-                          {showComparison === item.id && (
-                            <div className="bg-white rounded-lg p-4 border space-y-4">
-                              <div className="flex items-center justify-between">
-                                <h4 className="text-sm font-medium">Impact Comparison</h4>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => setShowComparison(null)}
-                                  className="text-xs text-gray-500"
-                                >
-                                  Close
-                                </Button>
-                              </div>
-                              
-                              {/* Product Comparison Cards */}
-                              <div className="grid grid-cols-2 gap-3">
-                                {/* Current Product */}
-                                <div className="border rounded-lg p-3 bg-gray-50">
-                                  <div className="text-xs text-gray-500 mb-2">Current</div>
-                                  <div className="w-full h-20 rounded overflow-hidden mb-2">
-                                    <ImageWithFallback
-                                      src={item.image}
-                                      alt={item.name}
-                                      className="w-full h-full object-cover"
-                                    />
-                                  </div>
-                                  <div className="text-xs font-medium mb-1">{item.name}</div>
-                                  <div className="text-xs text-gray-600">
-                                    <div>€{item.price.toFixed(2)}</div>
-                                    <div>{item.co2.toFixed(1)} kg CO₂</div>
-                                  </div>
-                                </div>
-
-                                {/* Suggested Product */}
-                                <div className="border-2 border-green-500 rounded-lg p-3 bg-green-50">
-                                  <div className="text-xs text-green-700 mb-2 font-medium">Suggested</div>
-                                  <div className="w-full h-20 rounded overflow-hidden mb-2">
-                                    <ImageWithFallback
-                                      src={item.swapSuggestion.image}
-                                      alt={item.swapSuggestion.name}
-                                      className="w-full h-full object-cover"
-                                    />
-                                  </div>
-                                  <div className="text-xs font-medium mb-1">{item.swapSuggestion.name}</div>
-                                  <div className="text-xs text-gray-600">
-                                    <div className="text-green-700">€{item.swapSuggestion.price.toFixed(2)}</div>
-                                    <div className="text-green-700">{item.swapSuggestion.co2.toFixed(1)} kg CO₂</div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Chart */}
-                              <ResponsiveContainer width="100%" height={150}>
-                                <BarChart data={getComparisonData(item)}>
-                                  <CartesianGrid strokeDasharray="3 3" />
-                                  <XAxis dataKey="name" fontSize={12} />
-                                  <YAxis fontSize={12} />
-                                  <Tooltip />
-                                  <Bar dataKey="Current" fill="#9ca3af" name="Current" />
-                                  <Bar dataKey="Suggested" fill="#16a34a" name="Suggested" />
-                                </BarChart>
-                              </ResponsiveContainer>
-
-                              {/* Savings Summary */}
-                              <div className="bg-green-50 rounded p-3">
-                                <div className="text-xs font-medium text-green-900 mb-1">Potential Savings</div>
-                                <div className="flex gap-4 text-xs text-green-800">
+                          {showComparison === item.id && item.swapSuggestion && (
+                            <div className="bg-white rounded-lg overflow-hidden border-2 border-green-500 shadow-lg">
+                              {/* Header */}
+                              <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 border-b border-green-200">
+                                <div className="flex items-center justify-between">
                                   <div>
-                                    <span className="font-semibold">€{Math.abs(item.price - item.swapSuggestion.price).toFixed(2)}</span>
-                                    {item.price > item.swapSuggestion.price ? " saved" : " more"}
+                                    <h4 className="font-medium text-green-900">Eco-Swap Comparison</h4>
+                                    <p className="text-xs text-green-700 mt-0.5">See how this swap helps you and the planet</p>
                                   </div>
-                                  <div>
-                                    <span className="font-semibold">{Math.abs(item.co2 - item.swapSuggestion.co2).toFixed(1)} kg CO₂</span>
-                                    {item.co2 > item.swapSuggestion.co2 ? " reduced" : " more"}
-                                  </div>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => setShowComparison(null)}
+                                    className="text-gray-500 hover:text-gray-700"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </Button>
                                 </div>
                               </div>
-                              
-                              {/* Action Buttons */}
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleSwapAccept(item.id)}
-                                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                                >
-                                  <Check className="w-4 h-4 mr-1" />
-                                  Accept Swap
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => setShowComparison(null)}
-                                  className="flex-1"
-                                >
-                                  <X className="w-4 h-4 mr-1" />
-                                  Decline
-                                </Button>
-                              </div>
 
-                              {/* Rejection Reasons */}
-                              <div className="pt-3 border-t">
-                                <p className="text-xs text-gray-600 mb-2">Not interested? Tell us why:</p>
-                                <div className="flex gap-2 flex-wrap">
+                              <div className="p-4 space-y-4">
+                                {/* Hero Savings Badges */}
+                                <div className="flex gap-2">
+                                  {(() => {
+                                    const priceDiff = item.price - item.swapSuggestion.price;
+                                    const co2Diff = item.co2 - item.swapSuggestion.co2;
+                                    const pricePercent = ((priceDiff / item.price) * 100).toFixed(0);
+                                    const co2Percent = ((co2Diff / item.co2) * 100).toFixed(0);
+                                    
+                                    return (
+                                      <>
+                                        {co2Diff > 0 && (
+                                          <div className="flex-1 bg-green-100 border border-green-300 rounded-lg p-3 text-center">
+                                            <div className="flex items-center justify-center gap-1 mb-1">
+                                              <TrendingDown className="w-4 h-4 text-green-700" />
+                                              <span className="text-2xl font-bold text-green-700">{co2Percent}%</span>
+                                            </div>
+                                            <div className="text-xs text-green-800">Less CO₂</div>
+                                            <div className="text-xs text-green-700 font-medium mt-1">-{co2Diff.toFixed(1)} kg</div>
+                                          </div>
+                                        )}
+                                        {co2Diff < 0 && (
+                                          <div className="flex-1 bg-red-100 border border-red-300 rounded-lg p-3 text-center">
+                                            <div className="flex items-center justify-center gap-1 mb-1">
+                                              <TrendingUp className="w-4 h-4 text-red-700" />
+                                              <span className="text-2xl font-bold text-red-700">{Math.abs(parseFloat(co2Percent))}%</span>
+                                            </div>
+                                            <div className="text-xs text-red-800">More CO₂</div>
+                                            <div className="text-xs text-red-700 font-medium mt-1">+{Math.abs(co2Diff).toFixed(1)} kg</div>
+                                          </div>
+                                        )}
+                                        {priceDiff > 0 && (
+                                          <div className="flex-1 bg-green-100 border border-green-300 rounded-lg p-3 text-center">
+                                            <div className="flex items-center justify-center gap-1 mb-1">
+                                              <TrendingDown className="w-4 h-4 text-green-700" />
+                                              <span className="text-2xl font-bold text-green-700">{pricePercent}%</span>
+                                            </div>
+                                            <div className="text-xs text-green-800">Lower Price</div>
+                                            <div className="text-xs text-green-700 font-medium mt-1">-€{priceDiff.toFixed(2)}</div>
+                                          </div>
+                                        )}
+                                        {priceDiff < 0 && (
+                                          <div className="flex-1 bg-orange-100 border border-orange-300 rounded-lg p-3 text-center">
+                                            <div className="flex items-center justify-center gap-1 mb-1">
+                                              <TrendingUp className="w-4 h-4 text-orange-700" />
+                                              <span className="text-2xl font-bold text-orange-700">{Math.abs(parseFloat(pricePercent))}%</span>
+                                            </div>
+                                            <div className="text-xs text-orange-800">Higher Price</div>
+                                            <div className="text-xs text-orange-700 font-medium mt-1">+€{Math.abs(priceDiff).toFixed(2)}</div>
+                                          </div>
+                                        )}
+                                      </>
+                                    );
+                                  })()}
+                                </div>
+
+                                {/* Visual Product Comparison */}
+                                <div className="relative">
+                                  <div className="flex gap-2 items-start">
+                                    {/* Current Product */}
+                                    <div className="flex-1 bg-gray-50 border-2 border-gray-300 rounded-lg p-3">
+                                      <div className="text-[10px] font-medium text-gray-500 mb-1.5 uppercase tracking-wide text-center">Current</div>
+                                      <div className="aspect-square w-20 mx-auto rounded overflow-hidden mb-2 bg-white">
+                                        <ImageWithFallback
+                                          src={item.image}
+                                          alt={item.name}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      </div>
+                                      <div className="text-xs font-medium text-gray-900 mb-1.5 line-clamp-2 min-h-[2.5rem] text-center">{item.name}</div>
+                                      <div className="space-y-0.5">
+                                        <div className="flex items-center justify-between text-[11px]">
+                                          <span className="text-gray-600">Price</span>
+                                          <span className="font-semibold text-gray-900">€{item.price.toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex items-center justify-between text-[11px]">
+                                          <span className="text-gray-600">CO₂</span>
+                                          <span className="font-semibold text-gray-900">{item.co2.toFixed(1)} kg</span>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* Arrow */}
+                                    <div className="flex flex-col items-center justify-center pt-8">
+                                      <ArrowRight className="w-6 h-6 text-green-600 flex-shrink-0" />
+                                    </div>
+
+                                    {/* Suggested Product */}
+                                    <div className="flex-1 bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-500 rounded-lg p-3 relative">
+                                      <div className="absolute -top-1.5 -right-1.5 bg-green-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-lg">
+                                        Eco
+                                      </div>
+                                      <div className="text-[10px] font-medium text-green-700 mb-1.5 uppercase tracking-wide text-center">Suggested</div>
+                                      <div className="aspect-square w-20 mx-auto rounded overflow-hidden mb-2 bg-white">
+                                        <ImageWithFallback
+                                          src={item.swapSuggestion.image}
+                                          alt={item.swapSuggestion.name}
+                                          className="w-full h-full object-cover"
+                                        />
+                                      </div>
+                                      <div className="text-xs font-medium text-gray-900 mb-1.5 line-clamp-2 min-h-[2.5rem] text-center">{item.swapSuggestion.name}</div>
+                                      <div className="space-y-0.5">
+                                        <div className="flex items-center justify-between text-[11px]">
+                                          <span className="text-gray-600">Price</span>
+                                          <span className={`font-semibold ${
+                                            item.swapSuggestion.price < item.price ? "text-green-700" : "text-orange-700"
+                                          }`}>
+                                            €{item.swapSuggestion.price.toFixed(2)}
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center justify-between text-[11px]">
+                                          <span className="text-gray-600">CO₂</span>
+                                          <span className={`font-semibold ${
+                                            item.swapSuggestion.co2 < item.co2 ? "text-green-700" : "text-red-700"
+                                          }`}>
+                                            {item.swapSuggestion.co2.toFixed(1)} kg
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Why This Swap */}
+                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                  <div className="flex items-start gap-2">
+                                    <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                      <Check className="w-3 h-3 text-white" />
+                                    </div>
+                                    <div>
+                                      <div className="text-xs font-medium text-blue-900 mb-1">Why we recommend this:</div>
+                                      <div className="text-xs text-blue-800">{item.swapSuggestion.reason}</div>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                {/* Action Buttons */}
+                                <div className="flex gap-2 pt-2">
                                   <Button
                                     size="sm"
-                                    variant="outline"
-                                    onClick={() => {
-                                      handleSwapReject(item.id, "Too Expensive");
-                                      setShowComparison(null);
-                                    }}
-                                    className="text-xs"
+                                    onClick={() => handleSwapAccept(item.id)}
+                                    className="flex-1 bg-green-600 hover:bg-green-700 text-white font-medium"
                                   >
-                                    Too Expensive
+                                    <Check className="w-4 h-4 mr-2" />
+                                    Make the Swap
                                   </Button>
                                   <Button
                                     size="sm"
                                     variant="outline"
-                                    onClick={() => {
-                                      handleSwapReject(item.id, "Don't Like Taste");
-                                      setShowComparison(null);
-                                    }}
-                                    className="text-xs"
+                                    onClick={() => setShowComparison(null)}
+                                    className="flex-1 border-gray-300"
                                   >
-                                    Don't Like Taste
+                                    Keep Current
                                   </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => {
-                                      handleSwapReject(item.id, "Need Specific Brand");
-                                      setShowComparison(null);
-                                    }}
-                                    className="text-xs"
-                                  >
-                                    Need Specific Brand
-                                  </Button>
+                                </div>
+
+                                {/* Rejection Reasons */}
+                                <div className="pt-3 border-t">
+                                  <p className="text-xs text-gray-600 mb-2">Not interested? Help us improve:</p>
+                                  <div className="flex gap-2 flex-wrap">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => {
+                                        handleSwapReject(item.id, "Too Expensive");
+                                        setShowComparison(null);
+                                      }}
+                                      className="text-xs"
+                                    >
+                                      Too Expensive
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => {
+                                        handleSwapReject(item.id, "Don't Like Taste");
+                                        setShowComparison(null);
+                                      }}
+                                      className="text-xs"
+                                    >
+                                      Don't Like Taste
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => {
+                                        handleSwapReject(item.id, "Need Specific Brand");
+                                        setShowComparison(null);
+                                      }}
+                                      className="text-xs"
+                                    >
+                                      Need Specific Brand
+                                    </Button>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -567,36 +646,122 @@ export function SmartCartPage() {
                       <span className="font-semibold">32% more sustainable</span> than the average shopper.
                     </p>
                   </div>
-                  <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
+                  <Button className="w-full bg-green-600 hover:bg-green-700 text-white" onClick={() => setShowCheckout(true)}>
                     Proceed to Checkout
                   </Button>
-                </div>
-
-                <div className="pt-4 border-t">
-                  <h3 className="text-sm font-medium mb-3">Sustainable Brands</h3>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-700">Local Harvest Co.</span>
-                      <Button variant="ghost" size="sm" className="text-yellow-600">
-                        <Star className="w-4 h-4 fill-yellow-600" />
-                      </Button>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-700">Green Fields Organic</span>
-                      <Button variant="ghost" size="sm">
-                        <Star className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-3">
-                    Follow brands to prioritize them in future recommendations
-                  </p>
                 </div>
               </CardContent>
             </Card>
           </div>
         </div>
       </main>
+
+      {/* Checkout Modal */}
+      {showCheckout && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Success Header */}
+            <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-8 text-center text-white">
+              <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Check className="w-10 h-10" />
+              </div>
+              <h2 className="text-3xl font-bold mb-2">Order Confirmed!</h2>
+              <p className="text-green-50">Thank you for choosing sustainable shopping</p>
+            </div>
+
+            {/* Order Details */}
+            <div className="p-8 space-y-6">
+              {/* Impact Summary */}
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border-2 border-green-200">
+                <div className="flex items-center gap-2 mb-4">
+                  <Sparkles className="w-5 h-5 text-green-600" />
+                  <h3 className="font-semibold text-green-900">Your Environmental Impact</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white rounded-lg p-4 text-center">
+                    <TrendingDown className="w-6 h-6 text-green-600 mx-auto mb-2" />
+                    <div className="text-2xl font-bold text-gray-900">{totalCO2.toFixed(1)} kg</div>
+                    <div className="text-xs text-gray-600 mt-1">Total CO₂</div>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 text-center">
+                    <Award className="w-6 h-6 text-green-600 mx-auto mb-2" />
+                    <div className="text-2xl font-bold text-gray-900">32%</div>
+                    <div className="text-xs text-gray-600 mt-1">Better than average</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Order Summary */}
+              <div>
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Package className="w-5 h-5 text-gray-600" />
+                  Order Summary
+                </h3>
+                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Items</span>
+                    <span className="font-medium">{totalItems}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Subtotal</span>
+                    <span className="font-medium">€{totalPrice.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Delivery</span>
+                    <span className="font-medium text-green-600">Free</span>
+                  </div>
+                  <div className="pt-3 border-t border-gray-200 flex justify-between">
+                    <span className="font-semibold">Total</span>
+                    <span className="font-bold text-lg">€{totalPrice.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Achievement Badge */}
+              <div className="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl p-6 border-2 border-yellow-200">
+                <div className="text-center">
+                  <div className="w-16 h-16 bg-yellow-400 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <Award className="w-8 h-8 text-yellow-900" />
+                  </div>
+                  <h3 className="font-bold text-yellow-900 mb-1">Achievement Unlocked!</h3>
+                  <p className="text-sm text-yellow-800">"Eco-Conscious Shopper" Badge Earned</p>
+                  <p className="text-xs text-yellow-700 mt-2">You've made 5 sustainable swaps this month</p>
+                </div>
+              </div>
+
+              {/* Delivery Info */}
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                <h4 className="text-sm font-medium text-blue-900 mb-2">Estimated Delivery</h4>
+                <p className="text-sm text-blue-800">Your order will arrive within <span className="font-semibold">2-3 business days</span></p>
+                <p className="text-xs text-blue-700 mt-1">We'll send tracking details to your email</p>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-4">
+                <Button 
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                  onClick={() => {
+                    localStorage.setItem('cartItems', JSON.stringify({}));
+                    navigate('/shop');
+                  }}
+                >
+                  Continue Shopping
+                </Button>
+                <Button 
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    localStorage.setItem('cartItems', JSON.stringify({}));
+                    navigate('/discover');
+                  }}
+                >
+                  Discover Recipes
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
